@@ -8,9 +8,10 @@ import (
 
 func noteRoutes(app *gin.RouterGroup) {
 	noteGroup := app.Group("/notes")
-	noteGroup.POST("", middleware.Authenticate, notecontroller.Create)
-	noteGroup.GET("", middleware.Authenticate, notecontroller.GetAll)
-	noteGroup.PATCH("/:id", middleware.Authenticate, notecontroller.Update)
-	noteGroup.DELETE("/:id", middleware.Authenticate, notecontroller.Delete)
+	noteGroup.Use(middleware.Authenticate)
+	noteGroup.GET("", notecontroller.GetAll)
+	noteGroup.POST("", notecontroller.Create)
+	noteGroup.PATCH("/:id", notecontroller.Update)
+	noteGroup.DELETE("/:id", notecontroller.Delete)
 
 }

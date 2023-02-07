@@ -1,13 +1,25 @@
 package models
 
 import (
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
 type Note struct {
-	gorm.Model
-	Title       string `json:"title" binding:"required" `
-	Description string `json:"description" binding:"required"`
-	UserID      uint   `json:"user_id" binding:"required"`
-	Tags        string `json:"tags" `
+	ID          string `gorm:"primarykey"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
+	Title       string         `json:"title" binding:"required" `
+	Description string         `json:"description"`
+	UserID      string         `json:"user_id" binding:"required"`
+	Tags        pq.StringArray `gorm:"type:text[]"`
+}
+
+func (note *Note) BeforeCreate(tx *gorm.DB) (err error) {
+	note.ID = uuid.NewString()
+	return
 }

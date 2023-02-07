@@ -58,12 +58,12 @@ go run app.go
 
 At this time, you have a RESTful API server running at `http://127.0.0.1:8080`. It provides the following endpoints:Environment variable PORT
 
-## Users endpoints
+## Authentication endpoints
 
-* `POST /api/v1/user/register`: Register a user form application with User model
-* `POST /api/v1/user/login`: Login a user  an created JWT for authentication, JWT expected 24 hours after and set JWT in session cookie
-* `GET /api/v1/user/validate`: Validate JWT and  returns current user information
-* `GET  /api/v1/user/logout`: Logout current user  and delete cookie
+* `POST /api/v1/auth/register`: Register a user form application with User model
+* `POST /api/v1/auth/login`: Login a user  an created JWT for authentication, JWT expected 24 hours after and set JWT in session cookie
+* `GET /api/v1/auth/validate`: Validate JWT and  returns current user information
+* `GET  /api/v1/auth/logout`: Logout current user  and delete cookie
 
 ## Notes endpoints
 

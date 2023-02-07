@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"fmt"
-
 	"os"
 	"time"
 
@@ -15,8 +14,6 @@ import (
  */
 
 /*
-*
-
 	CreateJWT
 
 function create a new token object, specifying signing method and the claims
@@ -24,9 +21,10 @@ function create a new token object, specifying signing method and the claims
 	@param  ID unit identifier  user
 	@return tokenString string and error error
 */
-func CreateJWT(ID uint) (tokenString string, err error) {
+func CreateJWT(ID string) (tokenString string, err error) {
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": ID,
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
@@ -41,8 +39,6 @@ func CreateJWT(ID uint) (tokenString string, err error) {
 var CurrentToken *jwt.Token
 
 /*
-*
-
 	IsValidToken
 
 function validates if the token is valid or not expired
@@ -79,8 +75,6 @@ func IsValidToken(tokenString string) bool {
 }
 
 /*
-*
-
 	GetClaims
 
 function  get claims from the current token

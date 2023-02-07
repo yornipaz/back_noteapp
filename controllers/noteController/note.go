@@ -3,8 +3,10 @@ package notecontroller
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 	"github.com/yornifpaz/back_noteapp/config"
 	"github.com/yornifpaz/back_noteapp/helpers"
 	"github.com/yornifpaz/back_noteapp/models"
@@ -14,8 +16,8 @@ func Create(ctx *gin.Context) {
 	var body struct {
 		Title       string
 		Description string
-		UserID      uint
-		Tags        string
+		UserID      string
+		Tags        pq.StringArray
 	}
 	if ctx.BindJSON(&body) != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -24,13 +26,16 @@ func Create(ctx *gin.Context) {
 		return
 
 	}
+
 	note := models.Note{
 		Title:       body.Title,
 		Description: body.Description,
 		UserID:      body.UserID,
 		Tags:        body.Tags,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
-	fmt.Println(ctx.Request)
+
 	result := config.DB.Create(&note)
 	if result.Error != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -48,8 +53,8 @@ func Update(ctx *gin.Context) {
 	var body struct {
 		Title       string
 		Description string
-		UserID      uint
-		Tags        string
+		UserID      string
+		Tags        pq.StringArray
 	}
 
 	if ctx.BindJSON(&body) != nil {
@@ -70,7 +75,9 @@ func Update(ctx *gin.Context) {
 	noteUpdate := models.Note{Title: body.Title,
 		Description: body.Description,
 		UserID:      body.UserID,
-		Tags:        body.Tags}
+		Tags:        body.Tags,
+		UpdatedAt:   time.Now(),
+	}
 
 	resultUpdate := config.DB.Model(&note).Updates(noteUpdate)
 	if resultUpdate.Error != nil {

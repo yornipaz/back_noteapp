@@ -1,7 +1,6 @@
 package usercontroller
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -26,7 +25,6 @@ func Register(ctx *gin.Context) {
 		return
 
 	}
-	fmt.Println(body, "IN request body")
 
 	hashPassword, err := helpers.CreatePassword(body.Password)
 	if err != nil {
@@ -37,13 +35,13 @@ func Register(ctx *gin.Context) {
 	}
 	var userValidate models.User
 	config.DB.First(&userValidate, "email=?", body.Email)
-	if userValidate.ID != 0 {
+	if userValidate.Email != "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"Error": "The user already exists in the database",
 		})
 		return
 	}
-	user := models.User{FirstName: body.FirstName, LastName: body.LastName, Email: body.Email, Password: string(hashPassword), Avatar: body.Avatar}
+	user := models.User{FirstName: body.FirstName, LastName: body.LastName, Email: body.Email, Password: string(hashPassword), Avatar: body.Avatar, CreatedAt: time.Now(), UpdatedAt: time.Now()}
 
 	result := config.DB.Create(&user)
 	if result.Error != nil {
@@ -71,7 +69,8 @@ func Login(ctx *gin.Context) {
 
 	var user models.User
 	config.DB.First(&user, "email=?", body.Email)
-	if user.ID == 0 {
+
+	if user.ID == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"Error": "Invalid email address provided or password",
 		})
@@ -98,19 +97,16 @@ func Login(ctx *gin.Context) {
 	ctx.SetSameSite(http.SameSiteDefaultMode)
 	ctx.SetCookie("Authorization", tokenString, 3600*24, "", "", false, true)
 	//send response token
-	c, err := ctx.Cookie("Authorization")
-	fmt.Println("Err : ", err)
-	fmt.Println("Cookie : ", c)
 
-	ctx.JSON(http.StatusOK, gin.H{})
+	ctx.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 
 }
 func Validate(ctx *gin.Context) {
 	claims := helpers.GetClaims(helpers.CurrentToken)
 
 	var user models.User
-	config.DB.First(&user, claims["sub"])
-	if user.ID == 0 {
+	config.DB.First(&user, "id=?", claims["sub"])
+	if user.ID == "" {
 		ctx.AbortWithStatus(http.StatusUnauthorized)
 	}
 
@@ -136,4 +132,50 @@ func Logout(ctx *gin.Context) {
 		"message": "Logout successfully user ",
 	})
 
+}
+func Update(ctx *gin.Context) {
+	claims := helpers.GetClaims(helpers.CurrentToken)
+	id := claims["sub"]
+
+	var body struct {
+		FirstName string
+		LastName  string
+		Email     string
+		Avatar    string
+		Password  string
+	}
+	if ctx.BindJSON(&body) != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": "Failed to read body from request",
+		})
+		return
+
+	}
+	var user models.User
+	result := config.DB.First(&user, id)
+	if result.Error != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": "This note no exist in to database",
+		})
+		return
+	}
+	userUpdate := models.User{
+		FirstName: body.FirstName,
+		LastName:  body.LastName,
+		Email:     body.Email,
+		Avatar:    body.Avatar,
+		Password:  body.Password,
+	}
+
+	resultUpdate := config.DB.Model(&user).Updates(userUpdate)
+	if resultUpdate.Error != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": "Failed to update user in to database",
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Updated user successfully",
+		"note":    user,
+	})
 }
