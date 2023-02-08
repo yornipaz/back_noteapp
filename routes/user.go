@@ -19,4 +19,5 @@ func userRoutes(app *gin.RouterGroup) {
 	userGroup := app.Group("/user")
 	userGroup.Use(middleware.Authenticate)
 	userGroup.PATCH("", usercontroller.Update)
+	userGroup.PATCH("/avatar", usercontroller.UpdateAvatar)
 }

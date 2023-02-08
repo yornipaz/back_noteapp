@@ -13,7 +13,7 @@ type Note struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
-	Title       string         `json:"title" binding:"required" `
+	Title       string         `json:"title"  `
 	Description string         `json:"description"`
 	UserID      string         `json:"user_id" binding:"required"`
 	Tags        pq.StringArray `gorm:"type:text[]"`

@@ -8,7 +8,9 @@ require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/PuerkitoBio/purell v1.2.0 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
+	github.com/cloudinary/cloudinary-go v1.7.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/creasty/defaults v1.6.0 // indirect
 	github.com/fatih/color v1.14.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
@@ -26,6 +28,7 @@ require (
 	github.com/goccy/go-json v0.10.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.3 // indirect
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/gorilla/schema v1.2.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/joho/godotenv v1.4.0 // indirect
@@ -45,7 +48,7 @@ require (
 	github.com/swaggo/files v1.0.0 // indirect
 	github.com/swaggo/gin-swagger v1.5.3 // indirect
 	github.com/swaggo/swag v1.8.10 // indirect
-	github.com/ugorji/go/codec v1.2.8 // indirect
+	github.com/ugorji/go/codec v1.2.9 // indirect
 	github.com/urfave/cli/v2 v2.24.2 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
@@ -53,7 +56,7 @@ require (
 	github.com/yuin/goldmark v1.5.3 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
 	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
 	golang.org/x/tools v0.5.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect

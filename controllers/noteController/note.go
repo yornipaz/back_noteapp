@@ -65,7 +65,7 @@ func Update(ctx *gin.Context) {
 
 	}
 	var note models.Note
-	result := config.DB.First(&note, id)
+	result := config.DB.First(&note, "id=?", id)
 	if result.Error != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"Error": "This note no exist in to database",
@@ -105,7 +105,7 @@ func GetAll(ctx *gin.Context) {
 func Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
 	fmt.Println(id)
-	result := config.DB.Delete(&models.Note{}, id)
+	result := config.DB.Delete(&models.Note{}, "id=?", id)
 	if result.Error != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"Error": "Failed to delete note in to database",

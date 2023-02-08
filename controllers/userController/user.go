@@ -8,6 +8,7 @@ import (
 	"github.com/yornifpaz/back_noteapp/config"
 	"github.com/yornifpaz/back_noteapp/helpers"
 	"github.com/yornifpaz/back_noteapp/models"
+	"github.com/yornifpaz/back_noteapp/services"
 )
 
 func Register(ctx *gin.Context) {
@@ -141,7 +142,6 @@ func Update(ctx *gin.Context) {
 		FirstName string
 		LastName  string
 		Email     string
-		Avatar    string
 		Password  string
 	}
 	if ctx.BindJSON(&body) != nil {
@@ -152,10 +152,10 @@ func Update(ctx *gin.Context) {
 
 	}
 	var user models.User
-	result := config.DB.First(&user, id)
+	result := config.DB.First(&user, "id=?", id)
 	if result.Error != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "This note no exist in to database",
+			"Error": "This user no exist in to database",
 		})
 		return
 	}
@@ -163,8 +163,7 @@ func Update(ctx *gin.Context) {
 		FirstName: body.FirstName,
 		LastName:  body.LastName,
 		Email:     body.Email,
-		Avatar:    body.Avatar,
-		Password:  body.Password,
+		UpdatedAt: time.Now(),
 	}
 
 	resultUpdate := config.DB.Model(&user).Updates(userUpdate)
@@ -178,4 +177,45 @@ func Update(ctx *gin.Context) {
 		"message": "Updated user successfully",
 		"note":    user,
 	})
+}
+func UpdateAvatar(ctx *gin.Context) {
+
+	formfile, _, err := ctx.Request.FormFile("avatar")
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Select a image to upload "})
+		return
+	}
+	uploadUrl, err := services.NewMediaUpload().FileUpload(models.File{File: formfile})
+	if err != nil {
+		ctx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"message": "Error uploading  image"},
+		)
+		return
+	}
+	claims := helpers.GetClaims(helpers.CurrentToken)
+	id := claims["sub"]
+	var user models.User
+	result := config.DB.First(&user, "id=?", id)
+	if result.Error != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": "This user no exist in to database",
+		})
+		return
+	}
+	resultUpdate := config.DB.Model(&user).Update("avatar", uploadUrl)
+	if resultUpdate.Error != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": "Failed to update user avatar in to database",
+		})
+		return
+	}
+	ctx.JSON(
+		http.StatusOK,
+		gin.H{
+			"statusCode": http.StatusOK,
+			"message":    "success",
+			"user":       user,
+		})
+
 }
