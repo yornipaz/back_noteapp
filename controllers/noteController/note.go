@@ -34,7 +34,7 @@ func Create(ctx *gin.Context) {
 			tasks = append(tasks, newTask)
 		}
 	}
-	userId := helpers.GetClaims(helpers.CurrentToken)["sub"].(string)
+	userId := helpers.GetCurrentUserId()
 	note := models.Note{
 		Title:       body.Title,
 		Description: body.Content,
@@ -109,7 +109,7 @@ func Update(ctx *gin.Context) {
 
 }
 func GetAll(ctx *gin.Context) {
-	userId := helpers.GetClaims(helpers.CurrentToken)["sub"].(string)
+	userId := helpers.GetCurrentUserId()
 	var notes []*models.Note
 	result := config.DB.Where("user_id = ?", userId).Preload("Tasks").Find(&notes)
 	if result.Error != nil {

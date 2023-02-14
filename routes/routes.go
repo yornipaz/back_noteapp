@@ -9,5 +9,6 @@ func AppRoutes(app *gin.Engine) {
 	authRoutes(v1)
 	userRoutes(v1)
 	noteRoutes(v1)
+	labelRoutes(v1)
 
 }

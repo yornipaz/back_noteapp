@@ -14,7 +14,7 @@ import (
 
 func Update(ctx *gin.Context) {
 
-	id := helpers.GetClaims(helpers.CurrentToken)["sub"].(string)
+	id := helpers.GetCurrentUserId()
 
 	var body dtos.UpdateUser
 	if ctx.BindJSON(&body) != nil {
@@ -71,7 +71,7 @@ func UpdateAvatar(ctx *gin.Context) {
 		return
 	}
 
-	id := helpers.GetClaims(helpers.CurrentToken)["sub"].(string)
+	id := helpers.GetCurrentUserId()
 	var user models.User
 	result := config.DB.First(&user, "id=?", id)
 	if result.Error != nil {
@@ -101,7 +101,7 @@ func UpdateAvatar(ctx *gin.Context) {
 }
 func UpdateStatus(ctx *gin.Context) {
 
-	id := helpers.GetClaims(helpers.CurrentToken)["sub"].(string)
+	id := helpers.GetCurrentUserId()
 
 	var body struct {
 		Status string
@@ -142,7 +142,7 @@ func UpdateStatus(ctx *gin.Context) {
 	})
 }
 func UpdatePassword(ctx *gin.Context) {
-	id := helpers.GetClaims(helpers.CurrentToken)["sub"].(string)
+	id := helpers.GetCurrentUserId()
 
 	var body struct {
 		Password string

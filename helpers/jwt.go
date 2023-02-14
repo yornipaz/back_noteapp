@@ -36,7 +36,7 @@ func CreateJWT(ID string) (tokenString string, err error) {
 	return
 }
 
-var CurrentToken *jwt.Token
+var currentToken *jwt.Token
 
 /*
 	IsValidToken
@@ -60,7 +60,7 @@ func IsValidToken(tokenString string) bool {
 	if err != nil {
 		return false
 	}
-	CurrentToken = token
+	currentToken = token
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
@@ -79,10 +79,21 @@ func IsValidToken(tokenString string) bool {
 
 function  get claims from the current token
 
-	@param  token *jwt.Token
 	@return claims jwt.MapClaims
 */
-func GetClaims(token *jwt.Token) (claims jwt.MapClaims) {
-	claims = token.Claims.(jwt.MapClaims)
+func GetClaims() (claims jwt.MapClaims) {
+	claims = currentToken.Claims.(jwt.MapClaims)
+	return
+}
+
+/*
+	GetCurrentUserId
+
+function  get  current user id  from the current token
+
+	@return userId string
+*/
+func GetCurrentUserId() (userId string) {
+	userId = GetClaims()["sub"].(string)
 	return
 }

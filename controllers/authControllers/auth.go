@@ -94,7 +94,7 @@ func Login(ctx *gin.Context) {
 
 }
 func Validate(ctx *gin.Context) {
-	id := helpers.GetClaims(helpers.CurrentToken)["sub"].(string)
+	id := helpers.GetCurrentUserId()
 
 	var user models.User
 	config.DB.First(&user, "id=?", id)
