@@ -8,145 +8,19 @@ import (
 	"github.com/yornifpaz/back_noteapp/config"
 	"github.com/yornifpaz/back_noteapp/helpers"
 	"github.com/yornifpaz/back_noteapp/models"
+	"github.com/yornifpaz/back_noteapp/models/dtos"
 	"github.com/yornifpaz/back_noteapp/services"
 )
 
-func Register(ctx *gin.Context) {
-	var body struct {
-		FirstName string
-		LastName  string
-		Email     string
-		Avatar    string
-		Password  string
-	}
-	if ctx.BindJSON(&body) != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Failed to read body from request",
-		})
-		return
-
-	}
-
-	hashPassword, err := helpers.CreatePassword(body.Password)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Failed to hash password from",
-		})
-		return
-	}
-	var userValidate models.User
-	config.DB.First(&userValidate, "email=?", body.Email)
-	if userValidate.Email != "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "The user already exists in the database",
-		})
-		return
-	}
-	user := models.User{FirstName: body.FirstName, LastName: body.LastName, Email: body.Email, Password: string(hashPassword), Avatar: body.Avatar, CreatedAt: time.Now(), UpdatedAt: time.Now()}
-
-	result := config.DB.Create(&user)
-	if result.Error != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Failed to create user in to database",
-		})
-		return
-	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Created user successfully",
-	})
-}
-func Login(ctx *gin.Context) {
-	var body struct {
-		Email    string
-		Password string
-	}
-	if ctx.Bind(&body) != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Failed to read body from request",
-		})
-		return
-
-	}
-
-	var user models.User
-	config.DB.First(&user, "email=?", body.Email)
-
-	if user.ID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Invalid email address provided or password",
-		})
-		return
-	}
-
-	err := helpers.ValidatePassword(body.Password, user.Password)
-
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Invalid password provided",
-		})
-		return
-	}
-
-	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := helpers.CreateJWT(user.ID)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Failed to sign token",
-		})
-		return
-	}
-	ctx.SetSameSite(http.SameSiteDefaultMode)
-	ctx.SetCookie("Authorization", tokenString, 3600*24, "", "", false, true)
-	//send response token
-
-	ctx.JSON(http.StatusOK, gin.H{"message": "Login successful"})
-
-}
-func Validate(ctx *gin.Context) {
-	claims := helpers.GetClaims(helpers.CurrentToken)
-
-	var user models.User
-	config.DB.First(&user, "id=?", claims["sub"])
-	if user.ID == "" {
-		ctx.AbortWithStatus(http.StatusUnauthorized)
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"user": user,
-	})
-
-}
-func Logout(ctx *gin.Context) {
-
-	cookie, err := ctx.Request.Cookie("Authorization")
-	if err != nil {
-		ctx.AbortWithStatus(http.StatusUnauthorized)
-	}
-	cookie.Name = "delete_token"
-	cookie.Value = "Unset"
-	cookie.MaxAge = -1
-	cookie.Expires = time.Unix(1, 0)
-	ctx.SetSameSite(http.SameSiteDefaultMode)
-	ctx.SetCookie("Authorization", "", -1, "", "", false, true)
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Logout successfully user ",
-	})
-
-}
 func Update(ctx *gin.Context) {
-	claims := helpers.GetClaims(helpers.CurrentToken)
-	id := claims["sub"]
 
-	var body struct {
-		FirstName string
-		LastName  string
-		Email     string
-		Password  string
-	}
+	id := helpers.GetClaims(helpers.CurrentToken)["sub"].(string)
+
+	var body dtos.UpdateUser
 	if ctx.BindJSON(&body) != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Failed to read body from request",
+			"Error":    "Failed to read body from request",
+			"isUpdate": false,
 		})
 		return
 
@@ -155,7 +29,8 @@ func Update(ctx *gin.Context) {
 	result := config.DB.First(&user, "id=?", id)
 	if result.Error != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "This user no exist in to database",
+			"Error":    "This user no exist ",
+			"isUpdate": false,
 		})
 		return
 	}
@@ -169,44 +44,48 @@ func Update(ctx *gin.Context) {
 	resultUpdate := config.DB.Model(&user).Updates(userUpdate)
 	if resultUpdate.Error != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Failed to update user in to database",
+			"Error":    "Failed to update user ",
+			"isUpdate": false,
 		})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Updated user successfully",
-		"note":    user,
+		"message":  "Updated  successfully",
+		"user":     user,
+		"isUpdate": true,
 	})
 }
 func UpdateAvatar(ctx *gin.Context) {
 
 	formfile, _, err := ctx.Request.FormFile("avatar")
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Select a image to upload "})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Select a image to upload ", "isUpdate": false})
 		return
 	}
 	uploadUrl, err := services.NewMediaUpload().FileUpload(models.File{File: formfile})
 	if err != nil {
 		ctx.JSON(
 			http.StatusInternalServerError,
-			gin.H{"message": "Error uploading  image"},
+			gin.H{"message": "Error uploading  image", "isUpdate": false},
 		)
 		return
 	}
-	claims := helpers.GetClaims(helpers.CurrentToken)
-	id := claims["sub"]
+
+	id := helpers.GetClaims(helpers.CurrentToken)["sub"].(string)
 	var user models.User
 	result := config.DB.First(&user, "id=?", id)
 	if result.Error != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "This user no exist in to database",
+			"Error":    "This user no exist ",
+			"isUpdate": false,
 		})
 		return
 	}
 	resultUpdate := config.DB.Model(&user).Update("avatar", uploadUrl)
 	if resultUpdate.Error != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Failed to update user avatar in to database",
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error":    "Failed to update  avatar ",
+			"isUpdate": false,
 		})
 		return
 	}
@@ -216,6 +95,97 @@ func UpdateAvatar(ctx *gin.Context) {
 			"statusCode": http.StatusOK,
 			"message":    "success",
 			"user":       user,
+			"isUpdate":   true,
 		})
 
+}
+func UpdateStatus(ctx *gin.Context) {
+
+	id := helpers.GetClaims(helpers.CurrentToken)["sub"].(string)
+
+	var body struct {
+		Status string
+	}
+	if ctx.BindJSON(&body) != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error":    "Failed to read body from request",
+			"isUpdate": false,
+		})
+		return
+
+	}
+	var user models.User
+	result := config.DB.First(&user, "id=?", id)
+	if result.Error != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": "This user no exist ",
+		})
+		return
+	}
+	userUpdate := models.User{
+		Status:    body.Status,
+		UpdatedAt: time.Now(),
+	}
+
+	resultUpdate := config.DB.Model(&user).Updates(userUpdate)
+	if resultUpdate.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error":    "Failed to update user",
+			"isUpdate": false,
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"message":  "Updated successfully",
+		"user":     user,
+		"isUpdate": true,
+	})
+}
+func UpdatePassword(ctx *gin.Context) {
+	id := helpers.GetClaims(helpers.CurrentToken)["sub"].(string)
+
+	var body struct {
+		Password string
+	}
+	if ctx.BindJSON(&body) != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error":    "Failed to read body from request",
+			"isUpdate": false,
+		})
+		return
+
+	}
+	var user models.User
+	result := config.DB.First(&user, "id=?", id)
+	if result.Error != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": "This user no exist ",
+		})
+		return
+	}
+	hashPassword, err := helpers.CreatePassword(body.Password)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Internal error server  ",
+		})
+		return
+	}
+	userUpdate := models.User{
+		Password:  string(hashPassword),
+		UpdatedAt: time.Now(),
+	}
+
+	resultUpdate := config.DB.Model(&user).Updates(userUpdate)
+	if resultUpdate.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error":    "Failed to update user",
+			"isUpdate": false,
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"message":  "Updated successfully",
+		"user":     user,
+		"isUpdate": true,
+	})
 }

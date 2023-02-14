@@ -1,31 +1,22 @@
 package notecontroller
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 	"github.com/yornifpaz/back_noteapp/config"
 	"github.com/yornifpaz/back_noteapp/helpers"
 	"github.com/yornifpaz/back_noteapp/models"
+	"github.com/yornifpaz/back_noteapp/models/dtos"
 )
 
 func Create(ctx *gin.Context) {
-	var body struct {
-		Title       string
-		Description string
-		UserID      string
-		Labels      pq.StringArray
-		Tasks       []models.Task
-		Reminder    time.Time
-		Archived    bool
-	}
+	var body dtos.AddNote
 	if ctx.BindJSON(&body) != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Failed to read body from request",
+			"message": "Failed to read body from request",
 		})
 		return
 
@@ -43,10 +34,11 @@ func Create(ctx *gin.Context) {
 			tasks = append(tasks, newTask)
 		}
 	}
+	userId := helpers.GetClaims(helpers.CurrentToken)["sub"].(string)
 	note := models.Note{
 		Title:       body.Title,
-		Description: body.Description,
-		UserID:      body.UserID,
+		Description: body.Content,
+		UserID:      userId,
 		Labels:      body.Labels,
 		Tasks:       tasks,
 		Reminder:    body.Reminder,
@@ -54,34 +46,29 @@ func Create(ctx *gin.Context) {
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	fmt.Println(" note : ", note)
 
 	result := config.DB.Create(&note)
 
 	if result.Error != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Failed to create note in to database",
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to create  ",
 		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Created note successfully",
+		"message": "Created successfully",
 	})
 
 }
 func Update(ctx *gin.Context) {
 	id := ctx.Param("id")
-	var body struct {
-		Title       string
-		Description string
-		UserID      string
-		Tags        pq.StringArray
-	}
+	var body dtos.UpdateNote
 
 	if ctx.BindJSON(&body) != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Failed to read body from request",
+			"message":  "Failed to read body from request",
+			"isUpdate": false,
 		})
 		return
 
@@ -90,49 +77,59 @@ func Update(ctx *gin.Context) {
 	result := config.DB.First(&note, "id=?", id)
 	if result.Error != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "This note no exist in to database",
+			"message":  "This note no exist ",
+			"isUpdate": false,
 		})
 		return
 	}
-	noteUpdate := models.Note{Title: body.Title,
-		Description: body.Description,
-		UserID:      body.UserID,
+	noteUpdate := models.Note{
 		UpdatedAt:   time.Now(),
+		Reminder:    body.Reminder,
+		Archived:    body.Archived,
+		Title:       body.Title,
+		Description: body.Content,
+		UserID:      body.UserID,
+		Labels:      body.Labels,
+		Tasks:       body.Tasks,
 	}
 
 	resultUpdate := config.DB.Model(&note).Updates(noteUpdate)
 	if resultUpdate.Error != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Failed to update note in to database",
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message":  "Failed to update ",
+			"isUpdate": false,
 		})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Updated note successfully",
-		"note":    note,
+		"message":  "Updated  successfully",
+		"note":     note,
+		"isUpdate": true,
 	})
 
 }
 func GetAll(ctx *gin.Context) {
-	claims := helpers.GetClaims(helpers.CurrentToken)
+	userId := helpers.GetClaims(helpers.CurrentToken)["sub"].(string)
 	var notes []*models.Note
-	result := config.DB.Where("user_id = ?", claims["sub"]).Preload("Tasks").Find(&notes)
+	result := config.DB.Where("user_id = ?", userId).Preload("Tasks").Find(&notes)
 	if result.Error != nil {
-		fmt.Println("Error: ", result.Error)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get  load ",
+		})
+		return
 	}
-	fmt.Println(notes)
 	ctx.JSON(http.StatusOK, gin.H{"Notes": notes})
 }
 func Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
-	fmt.Println(id)
 	result := config.DB.Delete(&models.Note{}, "id=?", id)
 	if result.Error != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Failed to delete note in to database",
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message":   "Failed to delete",
+			"isDeleted": false,
 		})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "Delete note successfully"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "Delete  successfully", "isDeleted": true})
 
 }
