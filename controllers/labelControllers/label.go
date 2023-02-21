@@ -1,6 +1,7 @@
 package labelcontrollers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 func Create(ctx *gin.Context) {
 	var body dtos.AddLabel
 	var Label models.Label
+
 	user_id := helpers.GetCurrentUserId()
 	if ctx.BindJSON(&body) != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -23,9 +25,9 @@ func Create(ctx *gin.Context) {
 
 	}
 	// Validate if label title is already
-	results := config.DB.Where("user_id=?", user_id).Where("title=?", body.Title).First(&Label)
+	config.DB.Where("user_id=?", user_id).Where("title=?", body.Title).First(&Label)
 
-	if results.Error != nil {
+	if Label.ID != "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "Failed label is already",
 		})
@@ -40,8 +42,18 @@ func Create(ctx *gin.Context) {
 		})
 		return
 	}
+	var labels []models.Label
+
+	resultsLabels := config.DB.Where("user_id = ?", user_id).Find(&labels)
+	if resultsLabels.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to load labels ",
+		})
+		return
+	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Created successfully",
+		"labels":  labels,
 	})
 
 }
@@ -58,9 +70,10 @@ func GetAll(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"labels": labels})
 }
 func Update(ctx *gin.Context) {
-	id := ctx.Param("id")
+
 	var body dtos.UpdateLabel
 	var label models.Label
+
 	if ctx.BindJSON(&body) != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message":  "Failed to read body from request",
@@ -69,12 +82,13 @@ func Update(ctx *gin.Context) {
 		return
 
 	}
+
 	// Validate if label title is already
-	results := config.DB.First(&label, "id=?", id)
+	results := config.DB.First(&label, "id=?", body.Id)
 
 	if results.Error != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message":  "This note no exist ",
+			"message":  "This label no exist ",
 			"isUpdate": false,
 		})
 		return
@@ -89,9 +103,18 @@ func Update(ctx *gin.Context) {
 		})
 		return
 	}
+	var labels []models.Label
+	user_id := helpers.GetCurrentUserId()
+	result := config.DB.Where("user_id = ?", user_id).Find(&labels)
+	if result.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to load labels ",
+		})
+		return
+	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"message":  "Updated  successfully",
-		"label":    label,
+		"labels":   labels,
 		"isUpdate": true,
 	})
 }
@@ -105,5 +128,15 @@ func Delete(ctx *gin.Context) {
 		})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "Delete  successfully", "isDeleted": true})
+	var labels []models.Label
+	user_id := helpers.GetCurrentUserId()
+	results := config.DB.Where("user_id = ?", user_id).Find(&labels)
+	fmt.Println("Labels:", labels)
+	if results.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to load labels ",
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "Delete  successfully", "isDeleted": true, "labels": labels})
 }

@@ -8,13 +8,10 @@ import (
 )
 
 type AddNote struct {
-	Reminder time.Time
 	Archived bool
 	Title    string
 	Content  string
-	Labels   pq.StringArray
 	Tasks    []models.Task
-	image    string
 }
 type UpdateNote struct {
 	Reminder time.Time
@@ -25,4 +22,16 @@ type UpdateNote struct {
 	Tasks    []models.Task
 	image    string
 	UserID   string
+	Id       string
+}
+type AddTask struct {
+	NoteId string
+	Task   string
+}
+
+type UpdateTask struct {
+	Id        string
+	Content   string
+	Completed bool
+	NoteRefer string
 }

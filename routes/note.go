@@ -11,7 +11,11 @@ func noteRoutes(app *gin.RouterGroup) {
 	noteGroup.Use(middleware.Authenticate)
 	noteGroup.GET("", notecontroller.GetAll)
 	noteGroup.POST("", notecontroller.Create)
-	noteGroup.PATCH("/:id", notecontroller.Update)
+	noteGroup.PATCH("", notecontroller.Update)
+	noteGroup.PATCH("/archived", notecontroller.UpdateArchived)
 	noteGroup.DELETE("/:id", notecontroller.Delete)
+	noteGroup.POST("/tasks", notecontroller.AddTasks)
+	noteGroup.PATCH("/tasks", notecontroller.UpdateTask)
+	noteGroup.DELETE("/tasks/:id", notecontroller.DeleteTask)
 
 }

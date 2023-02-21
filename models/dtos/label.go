@@ -5,4 +5,5 @@ type AddLabel struct {
 }
 type UpdateLabel struct {
 	Title string
+	Id    string
 }

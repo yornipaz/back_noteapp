@@ -11,7 +11,7 @@ func labelRoutes(app *gin.RouterGroup) {
 	labelGroup.Use(middleware.Authenticate)
 	labelGroup.POST("", labelcontrollers.Create)
 	labelGroup.GET("/all", labelcontrollers.GetAll)
-	labelGroup.PATCH("/:id", labelcontrollers.Update)
+	labelGroup.PATCH("", labelcontrollers.Update)
 	labelGroup.DELETE("/:id", labelcontrollers.Delete)
 
 }

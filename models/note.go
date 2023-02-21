@@ -23,7 +23,7 @@ type Note struct {
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
 	Title       string         `json:"title"  `
 	Description string         `json:"description"`
-	UserID      string         `json:"user_id" binding:"required"`
+	UserID      string
 	Labels      pq.StringArray `gorm:"type:text[]"`
 	Tasks       []Task         `gorm:"foreignKey:NoteRefer"`
 }
