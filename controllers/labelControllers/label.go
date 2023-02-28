@@ -1,142 +1,170 @@
 package labelcontrollers
 
 import (
-	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yornifpaz/back_noteapp/config"
 	"github.com/yornifpaz/back_noteapp/helpers"
-	"github.com/yornifpaz/back_noteapp/models"
 	"github.com/yornifpaz/back_noteapp/models/dtos"
+	labelrepository "github.com/yornifpaz/back_noteapp/repositories/labelRepository"
 )
 
-func Create(ctx *gin.Context) {
-	var body dtos.AddLabel
-	var Label models.Label
-
-	user_id := helpers.GetCurrentUserId()
-	if ctx.BindJSON(&body) != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to read body from request",
-		})
-		return
-
-	}
-	// Validate if label title is already
-	config.DB.Where("user_id=?", user_id).Where("title=?", body.Title).First(&Label)
-
-	if Label.ID != "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed label is already",
-		})
-		return
-	}
-	newLabel := models.Label{Title: body.Title, UserID: user_id, UpdatedAt: time.Now(), CreatedAt: time.Now()}
-
-	result := config.DB.Create(&newLabel)
-	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to create  ",
-		})
-		return
-	}
-	var labels []models.Label
-
-	resultsLabels := config.DB.Where("user_id = ?", user_id).Find(&labels)
-	if resultsLabels.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to load labels ",
-		})
-		return
-	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Created successfully",
-		"labels":  labels,
-	})
-
+type ILabelController interface {
+	Create() gin.HandlerFunc
+	GetAll() gin.HandlerFunc
+	Update() gin.HandlerFunc
+	Delete() gin.HandlerFunc
 }
-func GetAll(ctx *gin.Context) {
-	var labels []models.Label
-	user_id := helpers.GetCurrentUserId()
-	result := config.DB.Where("user_id = ?", user_id).Find(&labels)
-	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to load labels ",
-		})
-		return
-	}
-	ctx.JSON(http.StatusOK, gin.H{"labels": labels})
+type LabelController struct {
+	repository labelrepository.ILabelRepository
 }
-func Update(ctx *gin.Context) {
 
-	var body dtos.UpdateLabel
-	var label models.Label
+// Create implements ILabelController
+func (cl *LabelController) Create() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userId := helpers.GetCurrentUserId()
+		var body dtos.AddLabel
 
-	if ctx.BindJSON(&body) != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message":  "Failed to read body from request",
-			"isUpdate": false,
+		if ctx.BindJSON(&body) != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "Failed to read body from request",
+				"status":  400,
+			})
+			return
+
+		}
+		label, _ := cl.repository.GetByTitle(body.Title, userId)
+		if label.ID != "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "Failed label is already",
+				"status":  400,
+			})
+			return
+		}
+		errLabel := cl.repository.Save(body.Title, userId)
+		if errLabel != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to create  ",
+				"status":  500,
+			})
+			return
+		}
+		labels, errLabels := cl.repository.GetAll(userId)
+		if errLabels != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to load labels ",
+				"status":  500,
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": "Created successfully",
+			"labels":  labels,
+			"status":  200,
 		})
-		return
 
 	}
-
-	// Validate if label title is already
-	results := config.DB.First(&label, "id=?", body.Id)
-
-	if results.Error != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message":  "This label no exist ",
-			"isUpdate": false,
-		})
-		return
-	}
-	updateLabel := models.Label{Title: body.Title, UpdatedAt: time.Now()}
-
-	resultUpdate := config.DB.Model(&label).Updates(updateLabel)
-	if resultUpdate.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message":  "Failed to update ",
-			"isUpdate": false,
-		})
-		return
-	}
-	var labels []models.Label
-	user_id := helpers.GetCurrentUserId()
-	result := config.DB.Where("user_id = ?", user_id).Find(&labels)
-	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to load labels ",
-		})
-		return
-	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"message":  "Updated  successfully",
-		"labels":   labels,
-		"isUpdate": true,
-	})
 }
-func Delete(ctx *gin.Context) {
-	id := ctx.Param("id")
-	result := config.DB.Delete(&models.Label{}, "id=?", id)
-	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message":   "Failed to delete",
-			"isDeleted": false,
-		})
-		return
+
+// Delete implements ILabelController
+func (cl *LabelController) Delete() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.Param("id")
+		userId := helpers.GetCurrentUserId()
+		errDelete := cl.repository.Delete(id)
+		if errDelete != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message":   "Failed to delete",
+				"isDeleted": false,
+				"status":    500,
+			})
+			return
+		}
+
+		labels, errLabels := cl.repository.GetAll(userId)
+		if errLabels != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to load labels ",
+				"status":  500,
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{"message": "Delete  successfully", "isDeleted": true, "status": 200, "labels": labels})
+
 	}
-	var labels []models.Label
-	user_id := helpers.GetCurrentUserId()
-	results := config.DB.Where("user_id = ?", user_id).Find(&labels)
-	fmt.Println("Labels:", labels)
-	if results.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to load labels ",
-		})
-		return
+}
+
+// GetAll implements ILabelController
+func (cl *LabelController) GetAll() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userId := helpers.GetCurrentUserId()
+		labels, err := cl.repository.GetAll(userId)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to load labels ",
+				"status":  500,
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{"labels": labels, "status": 200})
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "Delete  successfully", "isDeleted": true, "labels": labels})
+}
+
+// Update implements ILabelController
+func (cl *LabelController) Update() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userId := helpers.GetCurrentUserId()
+		var body dtos.UpdateLabel
+
+		if ctx.BindJSON(&body) != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message":  "Failed to read body from request",
+				"isUpdate": false,
+				"status":   http.StatusBadRequest,
+			})
+			return
+
+		}
+
+		// Validate if label title is already
+		label, err := cl.repository.GetById(body.Id)
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message":  "This label no exist ",
+				"isUpdate": false,
+				"status":   http.StatusBadRequest,
+			})
+			return
+		}
+
+		errUpdate := cl.repository.Update(body.Title, label)
+		if errUpdate != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message":  "Failed to update ",
+				"isUpdate": false,
+				"status":   http.StatusInternalServerError,
+			})
+			return
+		}
+		labels, errLabels := cl.repository.GetAll(userId)
+		if errLabels != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to load labels ",
+				"status":  http.StatusInternalServerError,
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"message":  "Updated  successfully",
+			"labels":   labels,
+			"isUpdate": true,
+		})
+	}
+}
+
+func NewLabelController(repository labelrepository.ILabelRepository) ILabelController {
+	return &LabelController{
+		repository: repository,
+	}
 }
