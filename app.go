@@ -14,6 +14,6 @@ func init() {
 func main() {
 	app := gin.Default()
 	app.Use(middleware.CORSMiddleware())
-	routes.AppRoutes(app)
+	routes.NewApplicationRouter(app, config.DB).Setup()
 	app.Run()
 }

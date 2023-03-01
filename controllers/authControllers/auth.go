@@ -82,7 +82,7 @@ func Login(ctx *gin.Context) {
 	tokenString, err := helpers.CreateJWT(user.ID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to sign token",
+			"message": "Internal error server",
 		})
 		return
 	}

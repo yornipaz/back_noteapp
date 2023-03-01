@@ -7,11 +7,12 @@ import (
 )
 
 func authRoutes(app *gin.RouterGroup) {
+
 	authGroup := app.Group("/auth")
 
 	authGroup.POST("/register", authcontrollers.Register)
 	authGroup.POST("/login", authcontrollers.Login)
-	authGroup.GET("/validate", middleware.Authenticate, authcontrollers.Validate)
-	authGroup.GET("/logout", middleware.Authenticate, authcontrollers.Logout)
+	authGroup.GET("/validate", middleware.Authenticate(), authcontrollers.Validate)
+	authGroup.GET("/logout", middleware.Authenticate(), authcontrollers.Logout)
 
 }

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	labelfactory "github.com/yornifpaz/back_noteapp/factory/labelFactory"
 	"github.com/yornifpaz/back_noteapp/helpers"
 	"github.com/yornifpaz/back_noteapp/models/dtos"
 	labelrepository "github.com/yornifpaz/back_noteapp/repositories/labelRepository"
@@ -17,6 +18,7 @@ type ILabelController interface {
 }
 type LabelController struct {
 	repository labelrepository.ILabelRepository
+	factory    labelfactory.ILabelFactory
 }
 
 // Create implements ILabelController
@@ -41,10 +43,11 @@ func (cl *LabelController) Create() gin.HandlerFunc {
 			})
 			return
 		}
-		errLabel := cl.repository.Save(body.Title, userId)
+		newLabel := cl.factory.Create(body.Title, userId)
+		errLabel := cl.repository.Save(newLabel)
 		if errLabel != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"message": "Failed to create  ",
+				"message": "Internal error server",
 				"status":  500,
 			})
 			return
@@ -52,7 +55,7 @@ func (cl *LabelController) Create() gin.HandlerFunc {
 		labels, errLabels := cl.repository.GetAll(userId)
 		if errLabels != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"message": "Failed to load labels ",
+				"message": "Internal error server ",
 				"status":  500,
 			})
 			return
@@ -115,7 +118,6 @@ func (cl *LabelController) Update() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		userId := helpers.GetCurrentUserId()
 		var body dtos.UpdateLabel
-
 		if ctx.BindJSON(&body) != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"message":  "Failed to read body from request",
@@ -137,8 +139,8 @@ func (cl *LabelController) Update() gin.HandlerFunc {
 			})
 			return
 		}
-
-		errUpdate := cl.repository.Update(body.Title, label)
+		updateLabel := cl.factory.Update(body.Title)
+		errUpdate := cl.repository.Update(updateLabel, label)
 		if errUpdate != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"message":  "Failed to update ",
@@ -163,8 +165,9 @@ func (cl *LabelController) Update() gin.HandlerFunc {
 	}
 }
 
-func NewLabelController(repository labelrepository.ILabelRepository) ILabelController {
+func NewLabelController(repository labelrepository.ILabelRepository, factory labelfactory.ILabelFactory) ILabelController {
 	return &LabelController{
 		repository: repository,
+		factory:    factory,
 	}
 }
