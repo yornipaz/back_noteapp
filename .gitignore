@@ -12,6 +12,7 @@
 *.so
 *.dylib
 *.env
+back_noteapp
 
 # Test binary, built with `go test -c`
 *.test

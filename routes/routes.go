@@ -22,6 +22,11 @@ type Route struct {
 // setup implements IRoute
 func (appRoute *AppRoute) Setup() {
 	router := appRoute.app.Group("api/v1")
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Api work in progress",
+		})
+	})
 	routerNoteGroup := router.Group("notes")
 	newAuthRoutes(router, appRoute.db, "/auth").setupRoutesAuth()
 	newUserRoutes(router, appRoute.db, "/user").setupRoutesUser()
