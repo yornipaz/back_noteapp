@@ -64,7 +64,7 @@ func (cl *AuthController) Login() gin.HandlerFunc {
 			return
 		}
 		ctx.SetSameSite(http.SameSiteDefaultMode)
-		ctx.SetCookie("Authorization", tokenString, 3600*24, "", "", true, true)
+		ctx.SetCookie("Authorization", tokenString, 3600*24, "", ".netlify.app", true, true)
 		//send response token
 
 		ctx.JSON(http.StatusOK, gin.H{"message": "Login successful", "status": http.StatusOK})
