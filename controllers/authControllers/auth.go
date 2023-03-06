@@ -2,10 +2,12 @@ package authcontrollers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	userfactory "github.com/yornifpaz/back_noteapp/factory/userFactory"
 	"github.com/yornifpaz/back_noteapp/helpers"
+	"github.com/yornifpaz/back_noteapp/models"
 	"github.com/yornifpaz/back_noteapp/models/dtos"
 	userrepository "github.com/yornifpaz/back_noteapp/repositories/userRepository"
 )
@@ -63,32 +65,45 @@ func (cl *AuthController) Login() gin.HandlerFunc {
 			})
 			return
 		}
-		ctx.SetSameSite(http.SameSiteDefaultMode)
-		ctx.SetCookie("Authorization", tokenString, 3600*24, "", ".netlify.app", true, true)
+
 		//send response token
 
-		ctx.JSON(http.StatusOK, gin.H{"message": "Login successful", "status": http.StatusOK})
+		ctx.JSON(http.StatusOK, gin.H{"message": "Login successful", "token": tokenString, "status": http.StatusOK})
 	}
 }
 
 // Logout implements IAuthController
-func (*AuthController) Logout() gin.HandlerFunc {
+func (cl *AuthController) Logout() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		_, err := ctx.Request.Cookie("Authorization")
-		if err != nil {
+
+		id := helpers.GetCurrentUserId()
+		user, _ := cl.repository.GetById(id)
+		if user.ID == "" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"message": "Unauthorized access ",
-				"status":  http.StatusUnauthorized,
+				"message":  "Unauthorized access ",
+				"status":   http.StatusUnauthorized,
+				"isLogout": false,
+			})
+			return
+
+		}
+		userFactory := models.User{
+			LogoutAt: time.Now(),
+		}
+		_, errUpdate := cl.repository.Update(user, userFactory)
+		if errUpdate != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"Error":    "Failed to logout ",
+				"status":   http.StatusInternalServerError,
+				"isLogout": false,
 			})
 			return
 		}
 
-		ctx.SetSameSite(http.SameSiteDefaultMode)
-		ctx.SetCookie("Authorization", "", -1, "", "", false, true)
-
 		ctx.JSON(http.StatusOK, gin.H{
-			"message": "Logout successfully",
-			"status":  http.StatusOK,
+			"message":  "Logout successfully",
+			"status":   http.StatusOK,
+			"isLogout": true,
 		})
 	}
 }

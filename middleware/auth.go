@@ -9,10 +9,10 @@ import (
 
 func Authenticate() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		tokenString, err := ctx.Cookie("Authorization")
-		if err != nil {
-			ctx.AbortWithStatus(http.StatusUnauthorized)
-		}
+
+		const BEARER_SCHEMA = "Bearer"
+		authHeader := ctx.GetHeader("Authorization")
+		tokenString := authHeader[len(BEARER_SCHEMA):]
 		isValidToken := helpers.IsValidToken(tokenString)
 
 		if isValidToken {

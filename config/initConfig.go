@@ -1,7 +1,7 @@
 package config
 
 func Init() {
-	// loadVariables()
+	//loadVariables()
 	dbConfig()
 	syncDatabase()
 }
