@@ -6,8 +6,9 @@ import (
 )
 
 type Permission struct {
-	ID   string `gorm:"primarykey"`
-	Name string `gorm:"unique"`
+	ID     string `gorm:"primarykey"`
+	Name   string `gorm:"unique"`
+	RoleId string `gorm:"size:50"`
 }
 
 func (permission *Permission) BeforeCreate(tx *gorm.DB) (err error) {

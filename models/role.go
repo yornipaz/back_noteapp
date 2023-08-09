@@ -6,9 +6,9 @@ import (
 )
 
 type Role struct {
-	ID          string `gorm:"primarykey"`
-	Name        string `gorm:"unique"`
-	Permissions []Permission
+	ID          string       `gorm:"primarykey"`
+	Name        string       `gorm:"unique"`
+	Permissions []Permission `gorm:"foreignKey:RoleId"`
 }
 
 func (role *Role) BeforeCreate(tx *gorm.DB) (err error) {
