@@ -1,15 +1,16 @@
 package config
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/joho/godotenv"
 )
 
-func loadVariables() {
-	err := godotenv.Load("dev-env.env")
+func loadEnvironments() {
+	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file ", err.Error())
+		fmt.Println("Error loading .env file ", err.Error())
+		return
 	}
 
 }

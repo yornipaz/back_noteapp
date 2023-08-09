@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/yornifpaz/back_noteapp/lib"
 	"gorm.io/gorm"
 )
 
@@ -18,10 +18,12 @@ type User struct {
 	LastName  string
 	Email     string `gorm:"unique" `
 	Avatar    string
+	IsActive  bool `gorm:"default:true"`
 	Password  string
+	Roles     []Role `gorm:"many2many:user_roles;"`
 }
 
 func (user *User) BeforeCreate(tx *gorm.DB) (err error) {
-	user.ID = uuid.NewString()
+	user.ID = lib.NewIdLibrary().Create()
 	return
 }

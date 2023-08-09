@@ -27,7 +27,7 @@ type UserController struct {
 // Update implements IUserController
 func (cl *UserController) Update() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		id := helpers.GetCurrentUserId()
+		id := helpers.GetCurrentUserId(ctx)
 
 		var body dtos.UpdateUser
 		if ctx.BindJSON(&body) != nil {
@@ -75,7 +75,7 @@ func (cl *UserController) UpdateAvatar() gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{"message": "Select a image to upload ", "isUpdate": false})
 			return
 		}
-		id := helpers.GetCurrentUserId()
+		id := helpers.GetCurrentUserId(ctx)
 		user, errUser := cl.repository.GetById(id)
 		if errUser != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -119,7 +119,7 @@ func (cl *UserController) UpdateAvatar() gin.HandlerFunc {
 // UpdatePassword implements IUserController
 func (cl *UserController) UpdatePassword() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		id := helpers.GetCurrentUserId()
+		id := helpers.GetCurrentUserId(ctx)
 
 		var body struct {
 			Password string
@@ -172,7 +172,7 @@ func (cl *UserController) UpdatePassword() gin.HandlerFunc {
 // UpdateStatus implements IUserController
 func (cl *UserController) UpdateStatus() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		id := helpers.GetCurrentUserId()
+		id := helpers.GetCurrentUserId(ctx)
 
 		var body struct {
 			Status string

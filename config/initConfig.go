@@ -1,7 +1,11 @@
 package config
 
+import "os"
+
 func Init() {
-	//loadVariables()
+	if os.Getenv("ENV") != "production" {
+		loadEnvironments()
+	}
 	dbConfig()
 	syncDatabase()
 }

@@ -24,7 +24,7 @@ type LabelController struct {
 // Create implements ILabelController
 func (cl *LabelController) Create() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userId := helpers.GetCurrentUserId()
+		userId := helpers.GetCurrentUserId(ctx)
 		var body dtos.AddLabel
 
 		if ctx.BindJSON(&body) != nil {
@@ -73,7 +73,7 @@ func (cl *LabelController) Create() gin.HandlerFunc {
 func (cl *LabelController) Delete() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id := ctx.Param("id")
-		userId := helpers.GetCurrentUserId()
+		userId := helpers.GetCurrentUserId(ctx)
 		errDelete := cl.repository.Delete(id)
 		if errDelete != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -100,7 +100,7 @@ func (cl *LabelController) Delete() gin.HandlerFunc {
 // GetAll implements ILabelController
 func (cl *LabelController) GetAll() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userId := helpers.GetCurrentUserId()
+		userId := helpers.GetCurrentUserId(ctx)
 		labels, err := cl.repository.GetAll(userId)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -116,7 +116,7 @@ func (cl *LabelController) GetAll() gin.HandlerFunc {
 // Update implements ILabelController
 func (cl *LabelController) Update() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userId := helpers.GetCurrentUserId()
+		userId := helpers.GetCurrentUserId(ctx)
 		var body dtos.UpdateLabel
 		if ctx.BindJSON(&body) != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{

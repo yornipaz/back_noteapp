@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/yornifpaz/back_noteapp/lib"
 	"gorm.io/gorm"
 )
 
@@ -17,6 +17,6 @@ type Label struct {
 }
 
 func (label *Label) BeforeCreate(tx *gorm.DB) (err error) {
-	label.ID = uuid.NewString()
+	label.ID = lib.NewIdLibrary().Create()
 	return
 }

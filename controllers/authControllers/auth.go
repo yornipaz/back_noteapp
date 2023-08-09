@@ -9,6 +9,7 @@ import (
 	"github.com/yornifpaz/back_noteapp/helpers"
 	"github.com/yornifpaz/back_noteapp/models"
 	"github.com/yornifpaz/back_noteapp/models/dtos"
+	authrepository "github.com/yornifpaz/back_noteapp/repositories/authRepository"
 	userrepository "github.com/yornifpaz/back_noteapp/repositories/userRepository"
 )
 
@@ -19,15 +20,16 @@ type IAuthController interface {
 	Logout() gin.HandlerFunc
 }
 type AuthController struct {
-	repository userrepository.IUserRepository
-	factory    userfactory.IUserFactory
+	repository     userrepository.IUserRepository
+	factory        userfactory.IUserFactory
+	authRepository authrepository.IAuthRepository
 }
 
 // Login implements IAuthController
 func (cl *AuthController) Login() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var body dtos.LoginUser
-		if ctx.Bind(&body) != nil {
+		if ctx.BindJSON(&body) != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"message": "Failed to read body from request",
 				"status":  http.StatusBadRequest,
@@ -57,7 +59,10 @@ func (cl *AuthController) Login() gin.HandlerFunc {
 		}
 
 		// Sign and get the complete encoded token as a string using the secret
-		tokenString, err := helpers.CreateJWT(user.ID)
+		payload := map[string]interface{}{
+			"role": "admin",
+		}
+		tokenString, err := cl.authRepository.CreateJWT(user.ID, payload)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"message": "Internal error server",
@@ -76,7 +81,7 @@ func (cl *AuthController) Login() gin.HandlerFunc {
 func (cl *AuthController) Logout() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
-		id := helpers.GetCurrentUserId()
+		id := helpers.GetCurrentUserId(ctx)
 		user, _ := cl.repository.GetById(id)
 		if user.ID == "" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -156,7 +161,7 @@ func (cl *AuthController) Register() gin.HandlerFunc {
 // Validate implements IAuthController
 func (cl *AuthController) Validate() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		id := helpers.GetCurrentUserId()
+		id := helpers.GetCurrentUserId(ctx)
 		user, _ := cl.repository.GetById(id)
 		if user.ID == "" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{

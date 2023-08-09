@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	taskcontroller "github.com/yornifpaz/back_noteapp/controllers/taskController"
 	taskfactory "github.com/yornifpaz/back_noteapp/factory/taskFactory"
+	"github.com/yornifpaz/back_noteapp/lib"
 	"github.com/yornifpaz/back_noteapp/middleware"
 	noterepository "github.com/yornifpaz/back_noteapp/repositories/noteRepository"
 	taskrepository "github.com/yornifpaz/back_noteapp/repositories/taskRepository"
@@ -29,7 +30,8 @@ func (r *Route) setupRoutesTask() {
 func getTaskController(db *gorm.DB) (controller taskcontroller.ITaskController) {
 	repository := taskrepository.NewTaskRepository(db)
 	noteRepository := noterepository.NewNoteRepository(db)
-	factory := taskfactory.NewtaskFactory()
+	idLibrary := lib.NewIdLibrary()
+	factory := taskfactory.NewTaskFactory(idLibrary)
 	controller = taskcontroller.NewTaskController(repository, factory, noteRepository)
 	return
 }

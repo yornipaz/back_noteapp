@@ -10,10 +10,19 @@ type IUserRepository interface {
 	GetByEmail(email string) (user models.User, err error)
 	Save(user models.User) (err error)
 	Update(user models.User, updateUser models.User) (userUpdate models.User, err error)
+	GetWithPermission(userId string) (user models.User, err error)
 }
 
 type UserRepository struct {
 	db *gorm.DB
+}
+
+// GetPermission implements IUserRepository.
+func (r *UserRepository) GetWithPermission(userId string) (user models.User, err error) {
+
+	err = r.db.Preload("Roles.Permissions").First(&user, "id = ?", userId).Error
+	return
+
 }
 
 // GetByEmail implements IUserRepository

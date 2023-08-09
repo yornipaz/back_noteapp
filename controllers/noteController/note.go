@@ -33,7 +33,7 @@ func (cl *NoteController) Create() gin.HandlerFunc {
 			})
 			return
 		}
-		userId = helpers.GetCurrentUserId()
+		userId = helpers.GetCurrentUserId(ctx)
 		note := cl.factory.Create(body.Title, userId, body.Content)
 		err := cl.repository.Save(note)
 		if err != nil {
@@ -68,7 +68,7 @@ func (cl *NoteController) Delete() gin.HandlerFunc {
 // GetAll implements INoteController
 func (cl *NoteController) GetAll() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userId := helpers.GetCurrentUserId()
+		userId := helpers.GetCurrentUserId(ctx)
 		notes, err := cl.repository.GetAll(userId)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{

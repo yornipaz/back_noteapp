@@ -3,8 +3,8 @@ package models
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"github.com/yornifpaz/back_noteapp/lib"
 	"gorm.io/gorm"
 )
 
@@ -29,6 +29,6 @@ type Note struct {
 }
 
 func (note *Note) BeforeCreate(tx *gorm.DB) (err error) {
-	note.ID = uuid.NewString()
+	note.ID = lib.NewIdLibrary().Create()
 	return
 }

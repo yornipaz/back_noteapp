@@ -20,7 +20,7 @@ func NewMediaUpload() mediaUpload {
 	return &media{}
 }
 
-func (*media) FileUpload(file models.File) (string, error) {
+func (s *media) FileUpload(file models.File) (string, error) {
 	//validate
 	err := validate.Struct(file)
 	if err != nil {
