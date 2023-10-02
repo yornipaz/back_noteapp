@@ -2,10 +2,12 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	notecontroller "github.com/yornifpaz/back_noteapp/controllers/noteController"
-	notefactory "github.com/yornifpaz/back_noteapp/factory/noteFactory"
-	"github.com/yornifpaz/back_noteapp/middleware"
-	noterepository "github.com/yornifpaz/back_noteapp/repositories/noteRepository"
+
+	notefactory "github.com/yornifpaz/back_noteapp/app/factory/noteFactory"
+	notecontroller "github.com/yornifpaz/back_noteapp/app/http/controllers/noteController"
+	"github.com/yornifpaz/back_noteapp/app/http/middleware"
+	noterepository "github.com/yornifpaz/back_noteapp/app/repositories/noteRepository"
+
 	"gorm.io/gorm"
 )
 

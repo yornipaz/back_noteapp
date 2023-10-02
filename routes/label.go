@@ -2,10 +2,12 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	labelcontrollers "github.com/yornifpaz/back_noteapp/controllers/labelControllers"
-	labelfactory "github.com/yornifpaz/back_noteapp/factory/labelFactory"
-	"github.com/yornifpaz/back_noteapp/middleware"
-	labelrepository "github.com/yornifpaz/back_noteapp/repositories/labelRepository"
+
+	labelfactory "github.com/yornifpaz/back_noteapp/app/factory/labelFactory"
+	labelcontrollers "github.com/yornifpaz/back_noteapp/app/http/controllers/labelControllers"
+	"github.com/yornifpaz/back_noteapp/app/http/middleware"
+	labelrepository "github.com/yornifpaz/back_noteapp/app/repositories/labelRepository"
+
 	"gorm.io/gorm"
 )
 

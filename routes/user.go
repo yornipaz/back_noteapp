@@ -2,10 +2,12 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	usercontroller "github.com/yornifpaz/back_noteapp/controllers/userController"
-	userfactory "github.com/yornifpaz/back_noteapp/factory/userFactory"
-	"github.com/yornifpaz/back_noteapp/middleware"
-	userrepository "github.com/yornifpaz/back_noteapp/repositories/userRepository"
+
+	userfactory "github.com/yornifpaz/back_noteapp/app/factory/userFactory"
+	usercontroller "github.com/yornifpaz/back_noteapp/app/http/controllers/userController"
+	"github.com/yornifpaz/back_noteapp/app/http/middleware"
+	userrepository "github.com/yornifpaz/back_noteapp/app/repositories/userRepository"
+
 	"gorm.io/gorm"
 )
 

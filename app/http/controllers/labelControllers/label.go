@@ -1,0 +1,174 @@
+package labelcontrollers
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+
+	labelfactory "github.com/yornifpaz/back_noteapp/app/factory/labelFactory"
+	"github.com/yornifpaz/back_noteapp/app/helpers"
+	"github.com/yornifpaz/back_noteapp/app/models/dtos"
+	labelrepository "github.com/yornifpaz/back_noteapp/app/repositories/labelRepository"
+)
+
+type ILabelController interface {
+	Create() gin.HandlerFunc
+	GetAll() gin.HandlerFunc
+	Update() gin.HandlerFunc
+	Delete() gin.HandlerFunc
+}
+type LabelController struct {
+	repository labelrepository.ILabelRepository
+	factory    labelfactory.ILabelFactory
+}
+
+// Create implements ILabelController
+func (cl *LabelController) Create() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userId := helpers.GetCurrentUserId(ctx)
+		var body dtos.AddLabel
+
+		if ctx.BindJSON(&body) != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "Failed to read body from request",
+				"status":  400,
+			})
+			return
+
+		}
+		label, _ := cl.repository.GetByTitle(body.Title, userId)
+		if label.ID != "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "Failed label is already",
+				"status":  400,
+			})
+			return
+		}
+		newLabel := cl.factory.Create(body.Title, userId)
+		errLabel := cl.repository.Save(newLabel)
+		if errLabel != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Internal error server",
+				"status":  500,
+			})
+			return
+		}
+		labels, errLabels := cl.repository.GetAll(userId)
+		if errLabels != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Internal error server ",
+				"status":  500,
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": "Created successfully",
+			"labels":  labels,
+			"status":  200,
+		})
+
+	}
+}
+
+// Delete implements ILabelController
+func (cl *LabelController) Delete() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.Param("id")
+		userId := helpers.GetCurrentUserId(ctx)
+		errDelete := cl.repository.Delete(id)
+		if errDelete != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message":   "Failed to delete",
+				"isDeleted": false,
+				"status":    500,
+			})
+			return
+		}
+
+		labels, errLabels := cl.repository.GetAll(userId)
+		if errLabels != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to load labels ",
+				"status":  500,
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{"message": "Delete  successfully", "isDeleted": true, "status": 200, "labels": labels})
+
+	}
+}
+
+// GetAll implements ILabelController
+func (cl *LabelController) GetAll() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userId := helpers.GetCurrentUserId(ctx)
+		labels, err := cl.repository.GetAll(userId)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to load labels ",
+				"status":  500,
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{"labels": labels, "status": 200})
+	}
+}
+
+// Update implements ILabelController
+func (cl *LabelController) Update() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userId := helpers.GetCurrentUserId(ctx)
+		var body dtos.UpdateLabel
+		if ctx.BindJSON(&body) != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message":  "Failed to read body from request",
+				"isUpdate": false,
+				"status":   http.StatusBadRequest,
+			})
+			return
+
+		}
+
+		// Validate if label title is already
+		label, err := cl.repository.GetById(body.Id)
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message":  "This label no exist ",
+				"isUpdate": false,
+				"status":   http.StatusBadRequest,
+			})
+			return
+		}
+		updateLabel := cl.factory.Update(body.Title)
+		errUpdate := cl.repository.Update(updateLabel, label)
+		if errUpdate != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message":  "Failed to update ",
+				"isUpdate": false,
+				"status":   http.StatusInternalServerError,
+			})
+			return
+		}
+		labels, errLabels := cl.repository.GetAll(userId)
+		if errLabels != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to load labels ",
+				"status":  http.StatusInternalServerError,
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"message":  "Updated  successfully",
+			"labels":   labels,
+			"isUpdate": true,
+		})
+	}
+}
+
+func NewLabelController(repository labelrepository.ILabelRepository, factory labelfactory.ILabelFactory) ILabelController {
+	return &LabelController{
+		repository: repository,
+		factory:    factory,
+	}
+}

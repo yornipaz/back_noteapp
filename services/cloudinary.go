@@ -2,8 +2,8 @@ package services
 
 import (
 	"github.com/go-playground/validator/v10"
-	"github.com/yornifpaz/back_noteapp/helpers"
-	"github.com/yornifpaz/back_noteapp/models"
+	"github.com/yornifpaz/back_noteapp/app/helpers"
+	"github.com/yornifpaz/back_noteapp/app/models"
 )
 
 var (

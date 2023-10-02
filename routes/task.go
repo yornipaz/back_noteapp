@@ -2,12 +2,14 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	taskcontroller "github.com/yornifpaz/back_noteapp/controllers/taskController"
-	taskfactory "github.com/yornifpaz/back_noteapp/factory/taskFactory"
+
+	taskfactory "github.com/yornifpaz/back_noteapp/app/factory/taskFactory"
+	taskcontroller "github.com/yornifpaz/back_noteapp/app/http/controllers/taskController"
+	"github.com/yornifpaz/back_noteapp/app/http/middleware"
+	noterepository "github.com/yornifpaz/back_noteapp/app/repositories/noteRepository"
+	taskrepository "github.com/yornifpaz/back_noteapp/app/repositories/taskRepository"
 	"github.com/yornifpaz/back_noteapp/lib"
-	"github.com/yornifpaz/back_noteapp/middleware"
-	noterepository "github.com/yornifpaz/back_noteapp/repositories/noteRepository"
-	taskrepository "github.com/yornifpaz/back_noteapp/repositories/taskRepository"
+
 	"gorm.io/gorm"
 )
 
