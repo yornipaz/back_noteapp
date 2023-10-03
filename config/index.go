@@ -10,17 +10,32 @@ import (
 )
 
 type IConfig interface {
-	Init() (db *gorm.DB, err error)
+	Init() (db *gorm.DB, errors []error)
 	loadEnvironments() (err error)
-	syncDatabase(db *gorm.DB) (err error)
+	migrateModels(db *gorm.DB, dst ...interface{}) (err error)
 	configurationDatabase() (db *gorm.DB, err error)
 }
 type ConfigurationApplication struct {
 }
 
 // Init implements IConfig.
-func (configurationApplication *ConfigurationApplication) Init() (db *gorm.DB, err error) {
-	panic("unimplemented")
+func (configurationApplication *ConfigurationApplication) Init() (db *gorm.DB, errors []error) {
+	if os.Getenv("ENV") != "production" {
+		err := configurationApplication.loadEnvironments()
+		if err != nil {
+			errors = append(errors, err)
+		}
+	}
+	db, errDatabase := configurationApplication.configurationDatabase()
+	if errDatabase != nil {
+		errors = append(errors, errDatabase)
+	}
+	errMigration := configurationApplication.migrateModels(db, initialModels...)
+	if errMigration != nil {
+		errors = append(errors, errMigration)
+	}
+
+	return
 }
 
 // configurationDatabase implements IConfig.
@@ -48,18 +63,14 @@ func (configurationApplication *ConfigurationApplication) loadEnvironments() (er
 }
 
 // syncDatabase implements IConfig.
-func (configurationApplication *ConfigurationApplication) syncDatabase(db *gorm.DB) (err error) {
-	panic("unimplemented")
-}
-
-func Init() {
-	if os.Getenv("ENV") != "production" {
-		loadEnvironments()
+func (configurationApplication *ConfigurationApplication) migrateModels(db *gorm.DB, dst ...interface{}) (err error) {
+	err = db.AutoMigrate(dst...)
+	if err != nil {
+		fmt.Println("Failed to sync database", err.Error())
 	}
-	dbConfig()
-	syncDatabase()
+	return
 }
 
-func New() IConfig {
+func NewConfigurationApplication() IConfig {
 	return &ConfigurationApplication{}
 }
