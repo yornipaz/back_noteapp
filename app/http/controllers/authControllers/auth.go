@@ -18,11 +18,23 @@ type IAuthController interface {
 	Login() gin.HandlerFunc
 	Validate() gin.HandlerFunc
 	Logout() gin.HandlerFunc
+	ForgotPassword() gin.HandlerFunc
+	ResetPassword() gin.HandlerFunc
 }
 type AuthController struct {
 	repository     userrepository.IUserRepository
 	factory        userfactory.IUserFactory
 	authRepository authrepository.IAuthRepository
+}
+
+// ForgotPassword implements IAuthController.
+func (cl *AuthController) ForgotPassword() gin.HandlerFunc {
+	panic("unimplemented")
+}
+
+// ResetPassword implements IAuthController.
+func (cl *AuthController) ResetPassword() gin.HandlerFunc {
+	panic("unimplemented")
 }
 
 // Login implements IAuthController

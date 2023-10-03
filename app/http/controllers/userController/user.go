@@ -32,9 +32,10 @@ func (cl *UserController) Update() gin.HandlerFunc {
 
 		var body dtos.UpdateUser
 		if ctx.BindJSON(&body) != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Error":    "Failed to read body from request",
-				"isUpdate": false,
+			ctx.JSON(http.StatusBadRequest, models.APIResponse{
+				Message: "Failed to read body from request",
+				Status:  http.StatusBadRequest,
+				Data:    nil,
 			})
 			return
 
@@ -42,9 +43,10 @@ func (cl *UserController) Update() gin.HandlerFunc {
 		user, errUser := cl.repository.GetById(id)
 
 		if errUser != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Error":    "This user no exist ",
-				"isUpdate": false,
+			ctx.JSON(http.StatusBadRequest, models.APIResponse{
+				Message: "This user no exist ",
+				Status:  http.StatusBadRequest,
+				Data:    nil,
 			})
 			return
 		}
@@ -52,17 +54,18 @@ func (cl *UserController) Update() gin.HandlerFunc {
 
 		userUpdate, err := cl.repository.Update(user, userFactory)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Error":    "Failed to update user ",
-				"isUpdate": false,
+			ctx.JSON(http.StatusBadRequest, models.APIResponse{
+				Message: "Failed to update user ",
+				Status:  http.StatusBadRequest,
+				Data:    nil,
 			})
 			return
 		}
 		data := helpers.UserResponse(userUpdate)
-		ctx.JSON(http.StatusOK, gin.H{
-			"message":  "Updated  successfully",
-			"user":     data,
-			"isUpdate": true,
+		ctx.JSON(http.StatusOK, models.APIResponse{
+			Message: "resource updated successfully",
+			Status:  http.StatusOK,
+			Data:    data,
 		})
 	}
 }
@@ -73,15 +76,20 @@ func (cl *UserController) UpdateAvatar() gin.HandlerFunc {
 
 		formfile, _, err := ctx.Request.FormFile("avatar")
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "Select a image to upload ", "isUpdate": false})
+			ctx.JSON(http.StatusBadRequest, models.APIResponse{
+				Message: "Select a image to upload ",
+				Status:  http.StatusBadRequest,
+				Data:    nil,
+			})
 			return
 		}
 		id := helpers.GetCurrentUserId(ctx)
 		user, errUser := cl.repository.GetById(id)
 		if errUser != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Error":    "This user no exist ",
-				"isUpdate": false,
+			ctx.JSON(http.StatusBadRequest, models.APIResponse{
+				Message: "This user no exist",
+				Status:  http.StatusBadRequest,
+				Data:    nil,
 			})
 			return
 		}
@@ -89,7 +97,11 @@ func (cl *UserController) UpdateAvatar() gin.HandlerFunc {
 		if err != nil {
 			ctx.JSON(
 				http.StatusInternalServerError,
-				gin.H{"message": "Internal Error server", "isUpdate": false},
+				models.APIResponse{
+					Message: "Internal Error server",
+					Status:  http.StatusInternalServerError,
+					Data:    nil,
+				},
 			)
 			return
 		}
@@ -99,21 +111,21 @@ func (cl *UserController) UpdateAvatar() gin.HandlerFunc {
 		}
 		userUpdate, errUpdate := cl.repository.Update(user, userFactory)
 		if errUpdate != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"Error":    "Failed to update  avatar ",
-				"isUpdate": false,
+			ctx.JSON(http.StatusInternalServerError, models.APIResponse{
+				Message: "Failed to update  avatar ",
+				Status:  http.StatusInternalServerError,
+				Data:    nil,
 			})
 			return
 		}
 		data := helpers.UserResponse(userUpdate)
 		ctx.JSON(
-			http.StatusOK,
-			gin.H{
-				"status":   http.StatusOK,
-				"message":  "success",
-				"user":     data,
-				"isUpdate": true,
-			})
+			http.StatusOK, models.APIResponse{
+				Message: "success",
+				Status:  http.StatusOK,
+				Data:    data,
+			},
+		)
 	}
 }
 
@@ -194,7 +206,7 @@ func (cl *UserController) UpdateStatus() gin.HandlerFunc {
 			return
 		}
 		userFactory := models.User{
-			Status:    body.Status,
+			Status:    models.UserStatus(body.Status),
 			UpdatedAt: time.Now(),
 		}
 
