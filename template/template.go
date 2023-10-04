@@ -7,10 +7,15 @@ import (
 )
 
 type TemplateName string
+type Subject string
 
 const (
 	RecoveryPassword TemplateName = "recovery_password"
 	WelcomeUser      TemplateName = "welcome_user"
+)
+const (
+	Recovery Subject = "recovery_password"
+	Welcome  Subject = "welcome_user"
 )
 
 type Template struct {

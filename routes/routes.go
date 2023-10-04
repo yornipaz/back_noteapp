@@ -1,7 +1,10 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
+	"github.com/yornifpaz/back_noteapp/app/models"
 	"gorm.io/gorm"
 )
 
@@ -22,10 +25,13 @@ type Route struct {
 // setup implements IRoute
 func (appRoute *AppRoute) Setup() {
 	appRoute.app.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Api work in progress",
+		c.JSON(http.StatusOK, models.APIResponse{
+			Message: "Api work in progress",
+			Status:  http.StatusOK,
+			Data:    nil,
 		})
 	})
+
 	router := appRoute.app.Group("api/v1")
 	routerNoteGroup := router.Group("notes")
 	newAuthRoutes(router, appRoute.db, "/auth").setupRoutesAuth()

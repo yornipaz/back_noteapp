@@ -40,6 +40,8 @@ func (emailTemplate *EmailTemplate) GetEmailTemplate(templateName string, data a
 	return resultString, nil
 }
 
-func NewEmailTemplate(templateContents ITemplate, template *template.Template) IEmailTemplate {
-	return &EmailTemplate{templateContents: templateContents, template: template}
+func NewEmailTemplate() IEmailTemplate {
+	var templateObject = &template.Template{}
+	var templateContents = NewTemplate()
+	return &EmailTemplate{templateContents: templateContents, template: templateObject}
 }
