@@ -36,7 +36,6 @@ func (*EncryptLibrary) Validate(password string, hashPassword string) (err error
 	err = bcrypt.CompareHashAndPassword([]byte(hashPassword), []byte(password))
 	return
 }
-
 func NewEncryptLibrary() IEncryptLibrary {
 	return &EncryptLibrary{}
 }

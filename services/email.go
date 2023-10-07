@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/yornifpaz/back_noteapp/lib"
-	"github.com/yornifpaz/back_noteapp/template"
+	"github.com/yornifpaz/back_noteapp/templates"
 )
 
 type IEmailService interface {
@@ -12,8 +12,8 @@ type IEmailService interface {
 }
 
 type EmailService struct {
-	emailLibrary lib.EmailLibrary
-	templates    template.IEmailTemplate
+	emailLibrary lib.IEmailLibrary
+	templates    templates.IEmailTemplate
 }
 
 type Subject string
@@ -24,8 +24,10 @@ const (
 )
 
 func (emailService *EmailService) SendEmail(email string, templateName string, subject Subject, data any) (message string, err error) {
+
 	body, errTemplate := emailService.templates.GetEmailTemplate(templateName, data)
 	if errTemplate != nil {
+
 		return "", fmt.Errorf("error al obtener el template de %s: %w", subject, errTemplate)
 	}
 
@@ -38,18 +40,34 @@ func (emailService *EmailService) SendEmail(email string, templateName string, s
 }
 
 func (emailService *EmailService) sendEmail(typeEmail lib.MIMEType, email string, subject string, body string) (string, error) {
+
 	dialer := emailService.emailLibrary.ConfigDialer()
+	titleSubject := emailService.getSubject(subject)
+
 	configMsg := lib.EmailMessage{
 		To:       email,
-		Subject:  subject,
+		Subject:  string(titleSubject),
 		Body:     body,
 		TypeBody: typeEmail,
 	}
+
 	msg := emailService.emailLibrary.CreateMessage(configMsg)
+
 	message, err := emailService.emailLibrary.Send(dialer, msg)
+
 	return message, err
 }
+func (emailService *EmailService) getSubject(typeTemplate string) Subject {
+	switch typeTemplate {
+	case string(templates.RecoveryPassword):
+		return Recovery
+	case string(templates.Welcome):
+		return Welcome
+	}
+	return ""
 
-func NewEmailService(emailLibrary lib.EmailLibrary, templates template.IEmailTemplate) IEmailService {
+}
+
+func NewEmailService(emailLibrary lib.IEmailLibrary, templates templates.IEmailTemplate) IEmailService {
 	return &EmailService{emailLibrary: emailLibrary, templates: templates}
 }

@@ -5,6 +5,8 @@ import (
 	"os"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/cloudinary/cloudinary-go"
 	"github.com/cloudinary/cloudinary-go/api/uploader"
 )
@@ -20,12 +22,14 @@ func ImageUpload(input interface{}) (string, error) {
 	//create cloudinary instance
 	cld, err := cloudinary.NewFromParams(cloudName, cloudAPIKey, cloudAPISecret)
 	if err != nil {
+		log.Error("No se pudo crear la instancia de cloudinary: ", err)
 		return "", err
 	}
 
 	//upload file
 	uploadParam, err := cld.Upload.Upload(ctx, input, uploader.UploadParams{Folder: cloudUploadFolder})
 	if err != nil {
+		log.Error("No se pudo subir la imagen: ", err)
 		return "", err
 	}
 	return uploadParam.SecureURL, nil

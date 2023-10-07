@@ -1,6 +1,9 @@
 package lib
 
 import (
+	"crypto/tls"
+	"fmt"
+
 	gomail "gopkg.in/gomail.v2"
 )
 
@@ -75,7 +78,9 @@ func (emailLibrary *EmailLibrary) ConfigDialer() *gomail.Dialer {
 
 // ConfigDialer implements IEmailLibrary.
 func (*EmailLibrary) configDialer(config EmailConfig) *gomail.Dialer {
-	return gomail.NewDialer(config.SMTPHost, config.SMTPPort, config.Username, config.Password)
+	d := gomail.NewDialer(config.SMTPHost, config.SMTPPort, config.Username, config.Password)
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	return d
 }
 
 // send implements IEmailLibrary.
@@ -86,6 +91,7 @@ func (emailLibrary *EmailLibrary) Send(dialer *gomail.Dialer, messages ...*gomai
 func (*EmailLibrary) send(dialer *gomail.Dialer, messages ...*gomail.Message) (messageResponse string, err error) {
 	err = dialer.DialAndSend(messages...)
 	if err != nil {
+		fmt.Println(" : " + err.Error())
 		return "Error al enviar el correo : " + err.Error(), err
 	}
 	return "Correo enviado correctamente", nil

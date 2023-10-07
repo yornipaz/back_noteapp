@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
+	"github.com/yornifpaz/back_noteapp/app/exceptions"
 	userfactory "github.com/yornifpaz/back_noteapp/app/factory/userFactory"
 	"github.com/yornifpaz/back_noteapp/app/helpers"
 	"github.com/yornifpaz/back_noteapp/app/models"
@@ -73,9 +75,12 @@ func (cl *UserController) Update() gin.HandlerFunc {
 // UpdateAvatar implements IUserController
 func (cl *UserController) UpdateAvatar() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		defer exceptions.PanicHandler(ctx)
+		log.Info("start update avatar")
 
 		formfile, _, err := ctx.Request.FormFile("avatar")
 		if err != nil {
+			log.Error("Happened error when mapping request from FE. Error", err)
 			ctx.JSON(http.StatusBadRequest, models.APIResponse{
 				Message: "Select a image to upload ",
 				Status:  http.StatusBadRequest,
@@ -86,6 +91,9 @@ func (cl *UserController) UpdateAvatar() gin.HandlerFunc {
 		id := helpers.GetCurrentUserId(ctx)
 		user, errUser := cl.repository.GetById(id)
 		if errUser != nil {
+
+			log.Error("Happened error when mapping request from FE. Error", errUser)
+
 			ctx.JSON(http.StatusBadRequest, models.APIResponse{
 				Message: "This user no exist",
 				Status:  http.StatusBadRequest,
@@ -95,6 +103,7 @@ func (cl *UserController) UpdateAvatar() gin.HandlerFunc {
 		}
 		uploadUrl, err := services.NewMediaUpload().FileUpload(models.File{File: formfile})
 		if err != nil {
+			log.Error("Failed to upload avatar to cloud storage : ", err)
 			ctx.JSON(
 				http.StatusInternalServerError,
 				models.APIResponse{
@@ -111,13 +120,15 @@ func (cl *UserController) UpdateAvatar() gin.HandlerFunc {
 		}
 		userUpdate, errUpdate := cl.repository.Update(user, userFactory)
 		if errUpdate != nil {
+			log.Error("Failed to update avatar : ", errUpdate)
 			ctx.JSON(http.StatusInternalServerError, models.APIResponse{
-				Message: "Failed to update  avatar ",
+				Message: "Failed to update avatar ",
 				Status:  http.StatusInternalServerError,
 				Data:    nil,
 			})
 			return
 		}
+
 		data := helpers.UserResponse(userUpdate)
 		ctx.JSON(
 			http.StatusOK, models.APIResponse{

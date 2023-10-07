@@ -40,6 +40,10 @@ func (configurationApplication *ConfigurationApplication) ConfigurationDatabase(
 	return configurationApplication.configurationDatabase(config)
 
 }
+func (configurationApplication *ConfigurationApplication) initLogger() {
+	initLog()
+
+}
 
 // Init implements IConfig.
 func (configurationApplication *ConfigurationApplication) init() (db *gorm.DB, errors []error) {
@@ -50,6 +54,7 @@ func (configurationApplication *ConfigurationApplication) init() (db *gorm.DB, e
 			panic(err.Error())
 		}
 	}
+	configurationApplication.initLogger()
 	configDatabase := getDefaultDatabaseConfig()
 	db, errDatabase := configurationApplication.configurationDatabase(configDatabase)
 	if errDatabase != nil {

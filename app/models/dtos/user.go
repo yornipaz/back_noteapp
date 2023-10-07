@@ -17,3 +17,10 @@ type UpdateUser struct {
 	LastName  string
 	Email     string
 }
+type ForgotPasswordRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+type ResetPasswordRequest struct {
+	NewPassword     string `json:"newPassword" binding:"required,min=8"`                   // Suponiendo un requisito mínimo de longitud de contraseña
+	ConfirmPassword string `json:"confirmPassword" binding:"required,eqfield=NewPassword"` // Verificación de contraseña
+}
