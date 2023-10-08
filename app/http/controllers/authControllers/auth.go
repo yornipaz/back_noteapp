@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	constants "github.com/yornifpaz/back_noteapp/app/constant"
 	userfactory "github.com/yornifpaz/back_noteapp/app/factory/userFactory"
 	"github.com/yornifpaz/back_noteapp/app/helpers"
 	"github.com/yornifpaz/back_noteapp/app/models"
@@ -13,7 +14,6 @@ import (
 	authrepository "github.com/yornifpaz/back_noteapp/app/repositories/authRepository"
 	userrepository "github.com/yornifpaz/back_noteapp/app/repositories/userRepository"
 	"github.com/yornifpaz/back_noteapp/services"
-	"github.com/yornifpaz/back_noteapp/templates"
 )
 
 type IAuthController interface {
@@ -73,7 +73,7 @@ func (cl *AuthController) ForgotPassword() gin.HandlerFunc {
 			ResetLink: os.Getenv("FRONTEND_URL") + "/reset-password/" + resetToken,
 		}
 
-		message, errEmail := cl.emailService.SendEmail(user.Email, string(templates.RecoveryPassword), services.Subject(templates.Recovery), data)
+		message, errEmail := cl.emailService.SendEmail(user.Email, constants.HTML, constants.ForgotPassword, data)
 
 		if errEmail != nil {
 			ctx.JSON(http.StatusInternalServerError, models.APIResponse{

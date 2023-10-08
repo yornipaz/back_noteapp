@@ -3,10 +3,12 @@ package templates
 import (
 	"bytes"
 	"html/template"
+
+	constants "github.com/yornifpaz/back_noteapp/app/constant"
 )
 
 type IEmailTemplate interface {
-	GetEmailTemplate(templateName string, data any) (template string, err error)
+	GetEmailTemplate(templateType constants.EmailTypesTemplates, data any) (template string, err error)
 }
 type EmailTemplate struct {
 	template         *template.Template
@@ -14,9 +16,9 @@ type EmailTemplate struct {
 }
 
 // GetEmailTemplate implements IEmailTemplate.
-func (emailTemplate *EmailTemplate) GetEmailTemplate(templateName string, data any) (template string, err error) {
+func (emailTemplate *EmailTemplate) GetEmailTemplate(templateType constants.EmailTypesTemplates, data any) (template string, err error) {
 
-	newTemplate, err := emailTemplate.templateContents.GetTemplate(templateName)
+	newTemplate, err := emailTemplate.templateContents.GetTemplate(templateType)
 
 	if err != nil {
 
@@ -24,7 +26,7 @@ func (emailTemplate *EmailTemplate) GetEmailTemplate(templateName string, data a
 
 	}
 
-	tmpl, errTemplate := emailTemplate.template.New(templateName).Parse(newTemplate)
+	tmpl, errTemplate := emailTemplate.template.New(templateType.GetEmailTemplate()).Parse(newTemplate)
 
 	if errTemplate != nil {
 

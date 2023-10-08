@@ -3,40 +3,29 @@ package templates
 import (
 	"fmt"
 
+	constants "github.com/yornifpaz/back_noteapp/app/constant"
 	"github.com/yornifpaz/back_noteapp/app/models"
 )
 
-type TemplateName string
-type Subject string
-
-const (
-	RecoveryPassword TemplateName = "recovery_password"
-	WelcomeUser      TemplateName = "welcome_user"
-)
-const (
-	Recovery Subject = "recovery_password"
-	Welcome  Subject = "welcome_user"
-)
-
 type Template struct {
-	Templates map[TemplateName]models.TemplateData
+	Templates map[constants.EmailTypesTemplates]models.TemplateData
 }
 type ITemplate interface {
-	GetTemplate(name string) (template string, err error)
+	GetTemplate(typeTemplate constants.EmailTypesTemplates) (template string, err error)
 }
 
-func (t *Template) GetTemplate(name string) (template string, err error) {
-	templateString, ok := t.Templates[TemplateName(name)]
+func (t *Template) GetTemplate(typeTemplate constants.EmailTypesTemplates) (template string, err error) {
+	templateString, ok := t.Templates[typeTemplate]
 	if !ok {
-		return "", fmt.Errorf("plantilla no encontrada: %s", name)
+		return "", fmt.Errorf("plantilla no encontrada: %s", typeTemplate.GetSubject())
 	}
 
 	return templateString.Contend, nil
 }
 
 func NewTemplate() ITemplate {
-	templates := map[TemplateName]models.TemplateData{
-		RecoveryPassword: {
+	templates := map[constants.EmailTypesTemplates]models.TemplateData{
+		constants.ForgotPassword: {
 			TypeName: "html",
 			Contend: `
 		<!doctype html>
@@ -132,7 +121,7 @@ func NewTemplate() ITemplate {
 </html>
 		`,
 		},
-		WelcomeUser: {
+		constants.Welcome: {
 			TypeName: "html",
 			Contend: `<!DOCTYPE html>
 <html lang="es">

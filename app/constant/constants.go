@@ -2,7 +2,6 @@ package constants
 
 type ResponseStatus int
 type Headers int
-type General int
 
 // Constant Api
 const (
